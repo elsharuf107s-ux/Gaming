@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Linked PPC WASM Lab</title><style>:root{color-scheme:dark;background:#080b12;color:#eef2ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#18203a,#080b12 55%)}main{width:min(1050px,94vw);margin:auto;padding:32px 0 60px}.card{background:#111725;border:1px solid #2e3854;border-radius:18px;padding:18px;margin:14px 0}h1{font-size:clamp(2rem,6vw,4.2rem);margin:.2rem 0}.muted{color:#aeb8d2}.ok{color:#7df2a6}.warn{color:#ffd479}button,a{display:inline-block;border:0;border-radius:12px;padding:11px 14px;font-weight:800;text-decoration:none;cursor:pointer;background:#eef2ff;color:#0b0f18;margin:4px}pre{background:#080b12;color:#eef2ff;border:1px solid #2d3650;border-radius:12px;padding:14px;overflow:auto;min-height:160px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}</style></head><body><main><a href="/">← Dashboard</a><section class="card"><div class="ok">● LEVEL 3 LINKED EXECUTION</div><h1>Linked PPC → WASM</h1><p class="muted">Multiple separately compiled PowerPC functions share one register block and one WebAssembly memory. Direct <code>bl</code> calls dispatch into another compiled WASM function and return through LR. The second demo crosses into an Xbox kernel shim and resumes compiled code.</p></section><div class="grid"><section class="card"><h2>Internal function call</h2><p><code>40 → bl add_two → +1 → 43</code></p><button id="internal">Run internal-call demo</button></section><section class="card"><h2>Xbox kernel bridge</h2><p><code>KeQueryPerformanceFrequency → 50,000,000 → +1</code></p><button id="kernel">Run kernel-shim demo</button></section></div><section class="card"><h2>Execution output</h2><pre id="out">Ready.</pre></section><script src="/ppc-core.js"></script><script src="/ppc-functions.js"></script><script src="/ppc-state.js"></script><script src="/ppc-linked-wasm.js"></script><script src="/xbox-runtime.js"></script><script>
+const out=document.getElementById('out');
+const hx=v=>'0x'+(v>>>0).toString(16).padStart(8,'0');
+async function internalDemo(){
+  const F=UCRPPCFunctions,S=UCRPPCState,W=UCRPPCLinkedWasm,base=0x1000,callee=0x1020;
+  const words=[F.encodeMfspr(12,8),F.encodeD(14,3,0,40),F.encodeB(base+8,callee,{link:true}),F.encodeD(14,3,3,1),F.encodeMtspr(12,8),F.encodeBclr(),0,0,F.encodeD(14,3,3,2),F.encodeBclr()];
+  const program=W.compileProgram(F.wordsToBytes(words),{baseAddress:base,entryPoint:base,memoryPages:2});
+  const state=S.create({pages:2});
+  const runtime=await W.instantiateProgram(program,{state});
+  const result=runtime.runEntry();
+  out.textContent=JSON.stringify({test:'internal bl/blr',expected:43,result,r3:S.getGpr(state,3),lr:hx(S.getSpecial(state,'LR')),pc:hx(S.getSpecial(state,'PC')),compiledFunctions:runtime.instances.size,manifest:W.manifest(program)},null,2);
+}
+async function kernelDemo(){
+  const F=UCRPPCFunctions,S=UCRPPCState,W=UCRPPCLinkedWasm,X=UCRXboxRuntime,base=0x2000,thunk=0x9000;
+  const words=[F.encodeMfspr(12,8),F.encodeB(base+4,thunk,{link:true}),F.encodeD(14,3,3,1),F.encodeMtspr(12,8),F.encodeBclr()];
+  const program=W.compileProgram(F.wordsToBytes(words),{baseAddress:base,entryPoint:base,memoryPages:2});
+  const state=S.create({pages:2});
+  const xbox=X.create({state,trace:true});
+  xbox.bindThunk(thunk,'xboxkrnl',X.XBOXKRNL_ORDINALS.KeQueryPerformanceFrequency);
+  const runtime=await W.instantiateProgram(program,{state,externalCall:(target,ret)=>xbox.dispatchAddress(target,ret)});
+  const result=runtime.runEntry();
+  out.textContent=JSON.stringify({test:'Xbox kernel shim',expected:50000001,result,r3:S.getGpr(state,3),boundThunks:xbox.listThunks(),events:xbox.events},null,2);
+}
+document.getElementById('internal').onclick=()=>internalDemo().catch(e=>out.textContent='FAILED: '+e.stack);
+document.getElementById('kernel').onclick=()=>kernelDemo().catch(e=>out.textContent='FAILED: '+e.stack);
+</script></main></body></html>
