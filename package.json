@@ -1,6 +1,6 @@
 {
   "name": "universal-console-runtime",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Browser-first universal console runtime with emulator, recompilation, and remote-host backends.",
   "scripts": {
@@ -8,7 +8,8 @@
     "check": "node scripts/check.js",
     "test:recompiler": "node scripts/test-recompiler.js",
     "test:ppc": "node tests/ppc-core.test.js",
-    "test": "npm run test:recompiler && npm run test:ppc"
+    "test:functions": "node tests/ppc-functions.test.js",
+    "test": "npm run test:recompiler && npm run test:ppc && npm run test:functions"
   },
   "engines": {
     "node": ">=20"
