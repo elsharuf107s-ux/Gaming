@@ -35,6 +35,7 @@ jobs:
           curl --fail http://127.0.0.1:3000/recompiler-core.js
           curl --fail http://127.0.0.1:3000/ppc-lab.html
           curl --fail http://127.0.0.1:3000/ppc-core.js
+          curl --fail http://127.0.0.1:3000/ppc-module.js
           curl --fail http://127.0.0.1:3000/function-lab.html
           curl --fail http://127.0.0.1:3000/ppc-functions.js
           curl --fail http://127.0.0.1:3000/xex-lab.html
