@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Xenia Cloud</title>
+  <title>Universal Console Runtime</title>
   <style>
     :root{color-scheme:dark;background:#07090d;color:#eef2ff;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#18203a 0,#090b10 48%,#05070b 100%)}main{width:min(1180px,94vw);margin:0 auto;padding:34px 0 60px}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}.eyebrow{color:#7df2a6;font-weight:800;letter-spacing:.08em;font-size:.82rem}h1{margin:.2rem 0;font-size:clamp(2.3rem,7vw,5rem);line-height:.95}.muted{color:#aeb8d2}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:24px}.card{background:linear-gradient(180deg,#151a28,#10141f);border:1px solid #2d3650;border-radius:18px;padding:18px;box-shadow:0 16px 40px #0005}.card h2,.card h3{margin-top:0}.pill{display:inline-flex;border:1px solid #33415f;border-radius:999px;padding:6px 10px;font-size:.78rem}.ok{color:#7df2a6}.warn{color:#ffd479}.danger{color:#ff8b8b}button,a.button{display:inline-block;padding:12px 15px;border:0;border-radius:12px;font-weight:800;cursor:pointer;text-decoration:none;background:#eef2ff;color:#0a0d14}button.secondary,a.secondary{background:#20283b;color:#eef2ff;border:1px solid #394562}.actions{display:flex;gap:10px;flex-wrap:wrap}.game{position:relative;overflow:hidden}.game:before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,#ffffff08);pointer-events:none}.game-title{font-size:1.3rem;font-weight:850}.meta{font-size:.9rem;color:#aeb8d2}.session{border-left:3px solid #7df2a6}.stack{display:grid;gap:10px}pre{background:#080b11;border:1px solid #252d40;border-radius:12px;padding:14px;overflow:auto;min-height:90px}.section-title{margin:34px 0 12px}.small{font-size:.85rem}.hero-note{max-width:760px}.status-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.req{border-top:1px solid #2d3650;margin-top:14px;padding-top:12px}.category{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#8ea0cb}
   </style>
@@ -12,14 +12,15 @@
 <main>
   <div class="top">
     <div>
-      <div class="eyebrow">● $0 CONTROL PLANE ONLINE</div>
-      <h1>Xenia Cloud</h1>
-      <p class="muted hero-note">Browser-playable routes are enabled where possible. Xbox 360/Xenia titles still need a real GPU host, but Mario Kart 64 can now run directly in Chrome from your own local ROM.</p>
+      <div class="eyebrow">● $0 UNIVERSAL RUNTIME ONLINE</div>
+      <h1>Universal Console Runtime</h1>
+      <p class="muted hero-note">One browser launcher, multiple execution backends. Older consoles run locally through WebAssembly cores; game-specific recomp projects can plug in later; heavyweight systems such as Xbox 360 fall back to a future remote GPU backend.</p>
     </div>
     <div class="actions">
-      <button id="refresh" class="secondary">Refresh status</button>
-      <a class="button" href="/play-n64.html">N64 player</a>
+      <a class="button" href="/universal.html">Universal player</a>
+      <a class="button secondary" href="/play-n64.html">N64 player</a>
       <a class="button secondary" href="/stream.html?game=stream-lab">Stream lab</a>
+      <button id="refresh" class="secondary">Refresh status</button>
     </div>
   </div>
 
