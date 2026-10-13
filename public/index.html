@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Xenia Cloud</title>
   <style>
-    :root{color-scheme:dark;background:#07090d;color:#eef2ff;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#18203a 0,#090b10 48%,#05070b 100%)}main{width:min(1100px,94vw);margin:0 auto;padding:34px 0 60px}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}.eyebrow{color:#7df2a6;font-weight:800;letter-spacing:.08em;font-size:.82rem}h1{margin:.2rem 0;font-size:clamp(2.3rem,7vw,5rem);line-height:.95}.muted{color:#aeb8d2}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:24px}.card{background:linear-gradient(180deg,#151a28,#10141f);border:1px solid #2d3650;border-radius:18px;padding:18px;box-shadow:0 16px 40px #0005}.card h2,.card h3{margin-top:0}.pill{display:inline-flex;border:1px solid #33415f;border-radius:999px;padding:6px 10px;font-size:.78rem}.ok{color:#7df2a6}.warn{color:#ffd479}.danger{color:#ff8b8b}button,a.button{display:inline-block;padding:12px 15px;border:0;border-radius:12px;font-weight:800;cursor:pointer;text-decoration:none;background:#eef2ff;color:#0a0d14}button.secondary{background:#20283b;color:#eef2ff;border:1px solid #394562}.actions{display:flex;gap:10px;flex-wrap:wrap}.game{position:relative;overflow:hidden}.game:before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,#ffffff08);pointer-events:none}.game-title{font-size:1.3rem;font-weight:850}.meta{font-size:.9rem;color:#aeb8d2}.session{border-left:3px solid #7df2a6}.stack{display:grid;gap:10px}pre{background:#080b11;border:1px solid #252d40;border-radius:12px;padding:14px;overflow:auto;min-height:90px}.section-title{margin:34px 0 12px}.small{font-size:.85rem}.hero-note{max-width:760px}.status-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    :root{color-scheme:dark;background:#07090d;color:#eef2ff;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#18203a 0,#090b10 48%,#05070b 100%)}main{width:min(1180px,94vw);margin:0 auto;padding:34px 0 60px}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}.eyebrow{color:#7df2a6;font-weight:800;letter-spacing:.08em;font-size:.82rem}h1{margin:.2rem 0;font-size:clamp(2.3rem,7vw,5rem);line-height:.95}.muted{color:#aeb8d2}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:24px}.card{background:linear-gradient(180deg,#151a28,#10141f);border:1px solid #2d3650;border-radius:18px;padding:18px;box-shadow:0 16px 40px #0005}.card h2,.card h3{margin-top:0}.pill{display:inline-flex;border:1px solid #33415f;border-radius:999px;padding:6px 10px;font-size:.78rem}.ok{color:#7df2a6}.warn{color:#ffd479}.danger{color:#ff8b8b}button,a.button{display:inline-block;padding:12px 15px;border:0;border-radius:12px;font-weight:800;cursor:pointer;text-decoration:none;background:#eef2ff;color:#0a0d14}button.secondary,a.secondary{background:#20283b;color:#eef2ff;border:1px solid #394562}.actions{display:flex;gap:10px;flex-wrap:wrap}.game{position:relative;overflow:hidden}.game:before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,#ffffff08);pointer-events:none}.game-title{font-size:1.3rem;font-weight:850}.meta{font-size:.9rem;color:#aeb8d2}.session{border-left:3px solid #7df2a6}.stack{display:grid;gap:10px}pre{background:#080b11;border:1px solid #252d40;border-radius:12px;padding:14px;overflow:auto;min-height:90px}.section-title{margin:34px 0 12px}.small{font-size:.85rem}.hero-note{max-width:760px}.status-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.req{border-top:1px solid #2d3650;margin-top:14px;padding-top:12px}.category{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#8ea0cb}
   </style>
 </head>
 <body>
@@ -14,7 +14,7 @@
     <div>
       <div class="eyebrow">● $0 CONTROL PLANE ONLINE</div>
       <h1>Xenia Cloud</h1>
-      <p class="muted hero-note">GitHub Codespaces is acting as the free control plane and a simulated GPU host. The full launch flow works now; actual Xbox 360 emulation still needs a compatible GPU machine later.</p>
+      <p class="muted hero-note">Verified projects are now cataloged here. Codespaces still cannot provide the GPU needed for Xenia, so titles that need Xenia or native 3D recompilation are marked as requiring a future GPU host and your own legally obtained game data.</p>
     </div>
     <div class="actions">
       <button id="refresh" class="secondary">Refresh status</button>
@@ -39,22 +39,27 @@
 </main>
 <script>
 const out=document.getElementById('output');
-const esc=s=>String(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-async function api(url,options){const r=await fetch(url,options);const j=await r.json();out.textContent=JSON.stringify(j,null,2);if(!r.ok)throw new Error(j.error||r.statusText);return j}
+const esc=s=>String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function api(url,options){const r=await fetch(url,options);const j=await r.json();out.textContent=JSON.stringify(j,null,2);if(!r.ok){const e=new Error(j.error||r.statusText);e.payload=j;throw e}return j}
 async function loadStatus(){
   const [health,gpu,sessions]=await Promise.all([api('/api/health'),api('/api/gpu-host'),api('/api/sessions')]);
   document.getElementById('statusCards').innerHTML=`
     <section class="card"><h3>Control Plane</h3><p class="ok">Online</p><p class="small muted">Node ${esc(health.node)} · ${esc(health.platform)}/${esc(health.arch)}</p></section>
     <section class="card"><h3>Mock GPU Host</h3><p class="ok">${esc(gpu.host.state)}</p><p class="small muted">${esc(gpu.host.gpu)} · $${esc(gpu.host.costPerHourUsd)}/hr</p></section>
-    <section class="card"><h3>Active Sessions</h3><p>${esc(sessions.sessions.length)}</p><p class="small muted">Mock and browser test sessions</p></section>`;
+    <section class="card"><h3>Active Sessions</h3><p>${esc(sessions.sessions.length)}</p><p class="small muted">Browser test sessions only at the $0 stage</p></section>`;
   renderSessions(sessions.sessions);
 }
 async function loadGames(){
   const data=await api('/api/games');
   document.getElementById('games').innerHTML=data.games.map(g=>`<section class="card game">
-    <div class="status-row"><span class="pill">${esc(g.platform)}</span><span class="pill ${g.status==='playable'?'ok':'warn'}">${esc(g.status)}</span></div>
+    <div class="category">${esc(g.category)}</div>
+    <div class="status-row"><span class="pill">${esc(g.platform)}</span><span class="pill ${g.launchableHere?'ok':'warn'}">${esc(g.status)}</span></div>
     <p class="game-title">${esc(g.title)}</p><p class="meta">${esc(g.compatibility)}</p><p>${esc(g.notes)}</p>
-    <button onclick="launchGame('${esc(g.id)}')">${g.id==='stream-lab'?'Launch test':'Mock launch'}</button>
+    <div class="req"><strong>Needs:</strong><p class="small muted">${esc(g.requirements)}</p></div>
+    <div class="actions">
+      ${g.launchableHere?`<button onclick="launchGame('${esc(g.id)}')">Play now</button>`:`<button class="secondary" onclick="launchGame('${esc(g.id)}')">Check launch</button>`}
+      ${g.sourceUrl?`<a class="button secondary" href="${esc(g.sourceUrl)}" target="_blank" rel="noreferrer">GitHub project</a>`:''}
+    </div>
   </section>`).join('');
 }
 function renderSessions(items){
@@ -63,9 +68,14 @@ function renderSessions(items){
   el.innerHTML=items.map(s=>`<section class="card session"><div class="top"><div><strong>${esc(s.title)}</strong><div class="small muted">${esc(s.mode)} · ${esc(s.id)}</div></div><div class="actions"><a class="button" href="${esc(s.streamUrl)}">Open stream</a><button class="secondary" onclick="stopSession('${esc(s.id)}')">Stop</button></div></div><p class="small">${esc(s.notice)}</p></section>`).join('');
 }
 async function launchGame(gameId){
-  const data=await api('/api/launch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gameId})});
-  await loadStatus();
-  if(gameId==='stream-lab') location.href=data.session.streamUrl;
+  try{
+    const data=await api('/api/launch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gameId})});
+    await loadStatus();
+    if(data.session?.streamUrl) location.href=data.session.streamUrl;
+  }catch(e){
+    out.textContent=JSON.stringify(e.payload||{error:e.message},null,2);
+    alert((e.payload?.error||e.message)+(e.payload?.nextStep?'\n\n'+e.payload.nextStep:''));
+  }
 }
 async function stopSession(id){await api('/api/sessions/'+encodeURIComponent(id),{method:'DELETE'});await loadStatus()}
 document.getElementById('refresh').onclick=()=>Promise.all([loadStatus(),loadGames()]).catch(e=>out.textContent=String(e));
