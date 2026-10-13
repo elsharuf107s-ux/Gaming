@@ -21,17 +21,22 @@ jobs:
           npm start > /tmp/xenia-cloud.log 2>&1 &
           echo $! > /tmp/xenia-cloud.pid
           sleep 2
-      - name: Verify control plane APIs
+      - name: Verify control plane and browser player
         run: |
           curl --fail http://127.0.0.1:3000/api/health
           curl --fail http://127.0.0.1:3000/api/gpu-host
           curl --fail http://127.0.0.1:3000/api/games
           curl --fail http://127.0.0.1:3000/stream.html
+          curl --fail http://127.0.0.1:3000/play-n64.html
       - name: Verify launch flow
         run: |
           curl --fail -X POST \
             -H 'Content-Type: application/json' \
             -d '{"gameId":"stream-lab"}' \
+            http://127.0.0.1:3000/api/launch
+          curl --fail -X POST \
+            -H 'Content-Type: application/json' \
+            -d '{"gameId":"mkart360"}' \
             http://127.0.0.1:3000/api/launch
           curl --fail http://127.0.0.1:3000/api/sessions
       - name: Stop server
