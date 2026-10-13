@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Xenia Cloud Stream Lab</title>
+  <style>
+    :root{color-scheme:dark;background:#040609;color:#eef2ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif}*{box-sizing:border-box}body{margin:0;background:#040609}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#0d1119;border-bottom:1px solid #20283a;position:sticky;top:0;z-index:10}.brand{font-weight:900}.live{color:#7df2a6;font-size:.8rem;font-weight:800}.wrap{width:min(1200px,100vw);margin:auto;padding:12px}.stage{position:relative;aspect-ratio:16/9;background:#080b10;border:1px solid #293147;border-radius:16px;overflow:hidden;box-shadow:0 30px 80px #0009}canvas{display:block;width:100%;height:100%;touch-action:none}.hud{position:absolute;top:12px;left:12px;background:#05070bcc;border:1px solid #343e56;border-radius:10px;padding:8px 10px;font:12px ui-monospace,monospace;pointer-events:none}.help{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:12px}.card{background:#10151f;border:1px solid #293147;border-radius:14px;padding:14px}.muted{color:#a9b3c9}.buttons{display:flex;gap:8px;align-items:center}a,button{background:#eef2ff;color:#090c12;border:0;border-radius:10px;padding:9px 12px;text-decoration:none;font-weight:800;cursor:pointer}.secondary{background:#1c2433;color:#eef2ff;border:1px solid #37435e}
+  </style>
+</head>
+<body>
+<header>
+  <div><span class="brand">XENIA CLOUD</span> <span class="live">● STREAM LAB</span></div>
+  <div class="buttons"><button id="fullscreen" class="secondary">Fullscreen</button><a href="/">Dashboard</a></div>
+</header>
+<div class="wrap">
+  <div class="stage" id="stage">
+    <canvas id="game" width="1280" height="720"></canvas>
+    <div class="hud" id="hud">starting…</div>
+  </div>
+  <div class="help">
+    <div class="card"><strong>Keyboard</strong><p class="muted">WASD / arrow keys move. Hold Shift to sprint. Space jumps.</p></div>
+    <div class="card"><strong>Controller</strong><p class="muted">Left stick moves. A / Cross jumps. Gamepad support is detected through Chrome.</p></div>
+    <div class="card"><strong>What this proves</strong><p class="muted">Your Chromebook can run the future streaming client UI and input loop. This page does not emulate Xbox 360 hardware.</p></div>
+  </div>
+</div>
+<script>
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+const hud=document.getElementById('hud');
+const stage=document.getElementById('stage');
+const keys=new Set();
+let last=performance.now(),frames=0,fps=0,fpsClock=last;
+const player={x:640,y:570,vx:0,vy:0,w:28,h:52,onGround:true};
+const platforms=[
+  {x:0,y:640,w:1280,h:80},{x:120,y:520,w:250,h:26},{x:470,y:455,w:210,h:26},{x:790,y:390,w:300,h:26},{x:1030,y:555,w:170,h:26}
+];
+addEventListener('keydown',e=>{keys.add(e.code);if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault()},{passive:false});
+addEventListener('keyup',e=>keys.delete(e.code));
+function input(){
+  let x=0,jump=false,gamepad='none';
+  if(keys.has('KeyA')||keys.has('ArrowLeft'))x-=1;
+  if(keys.has('KeyD')||keys.has('ArrowRight'))x+=1;
+  if(keys.has('Space'))jump=true;
+  const pads=navigator.getGamepads?navigator.getGamepads():[];
+  for(const p of pads){if(!p)continue;gamepad=p.id;const ax=p.axes[0]||0;if(Math.abs(ax)>.18)x=Math.abs(ax)>Math.abs(x)?ax:x;if(p.buttons[0]?.pressed)jump=true;break}
+  return{x,jump,gamepad};
+}
+function update(dt){
+  const i=input();const sprint=keys.has('ShiftLeft')||keys.has('ShiftRight');
+  player.vx=i.x*(sprint?430:285);player.vy+=1500*dt;
+  if(i.jump&&player.onGround){player.vy=-610;player.onGround=false}
+  player.x+=player.vx*dt;player.x=Math.max(0,Math.min(1280-player.w,player.x));
+  const prevBottom=player.y+player.h;player.y+=player.vy*dt;player.onGround=false;
+  for(const p of platforms){
+    const newBottom=player.y+player.h;
+    if(player.vy>=0&&player.x+player.w>p.x&&player.x<p.x+p.w&&prevBottom<=p.y+10&&newBottom>=p.y){player.y=p.y-player.h;player.vy=0;player.onGround=true}
+  }
+  if(player.y>760){player.x=640;player.y=500;player.vy=0}
+  return i;
+}
+function draw(i){
+  const g=ctx.createLinearGradient(0,0,0,720);g.addColorStop(0,'#18223a');g.addColorStop(1,'#080b11');ctx.fillStyle=g;ctx.fillRect(0,0,1280,720);
+  ctx.fillStyle='#ffffff09';for(let x=0;x<1280;x+=80)ctx.fillRect(x,0,1,720);for(let y=0;y<720;y+=80)ctx.fillRect(0,y,1280,1);
+  ctx.fillStyle='#313c56';for(const p of platforms)ctx.fillRect(p.x,p.y,p.w,p.h);
+  ctx.fillStyle='#7df2a6';ctx.fillRect(player.x,player.y,player.w,player.h);
+  ctx.fillStyle='#eef2ff';ctx.font='700 20px system-ui';ctx.fillText('Browser-native latency & input test',28,42);
+  ctx.font='16px system-ui';ctx.fillStyle='#aeb8d2';ctx.fillText('This simulates the client side of a future Xenia stream.',28,70);
+  hud.textContent=`FPS: ${fps}\nInput: ${Math.abs(i.x)>.01?'MOVE':'idle'}\nGamepad: ${i.gamepad==='none'?'not detected':'connected'}\nResolution: 1280×720`;
+}
+function loop(now){
+  const dt=Math.min(.033,(now-last)/1000);last=now;const i=update(dt);draw(i);frames++;
+  if(now-fpsClock>=500){fps=Math.round(frames*1000/(now-fpsClock));frames=0;fpsClock=now}
+  requestAnimationFrame(loop);
+}
+document.getElementById('fullscreen').onclick=()=>stage.requestFullscreen?.();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
