@@ -1,6 +1,6 @@
 {
   "name": "universal-console-runtime",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "Browser-first universal console runtime with emulator, recompilation, and remote-host backends.",
   "scripts": {
@@ -11,7 +11,8 @@
     "test:functions": "node tests/ppc-functions.test.js",
     "test:xex": "node tests/xex-parser.test.js",
     "test:xex-loader": "node tests/xex-loader.test.js",
-    "test": "npm run test:recompiler && npm run test:ppc && npm run test:functions && npm run test:xex && npm run test:xex-loader"
+    "test:pe": "node tests/pe-parser.test.js",
+    "test": "npm run test:recompiler && npm run test:ppc && npm run test:functions && npm run test:xex && npm run test:xex-loader && npm run test:pe"
   },
   "engines": {
     "node": ">=20"
