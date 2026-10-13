@@ -39,6 +39,8 @@ jobs:
           curl --fail http://127.0.0.1:3000/ppc-state.js
           curl --fail http://127.0.0.1:3000/ppc-linker.js
           curl --fail http://127.0.0.1:3000/ppc-linked-wasm.js
+          curl --fail http://127.0.0.1:3000/xbox-runtime.js
+          curl --fail http://127.0.0.1:3000/linked-wasm-lab.html
           curl --fail http://127.0.0.1:3000/function-lab.html
           curl --fail http://127.0.0.1:3000/ppc-functions.js
           curl --fail http://127.0.0.1:3000/xex-lab.html
