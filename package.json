@@ -1,0 +1,13 @@
+{
+  "name": "xenia-cloud-starter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Free GitHub Codespaces foundation for a future Xenia cloud-streaming setup.",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node scripts/check.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
