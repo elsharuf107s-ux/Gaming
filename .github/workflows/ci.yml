@@ -39,6 +39,7 @@ jobs:
           curl --fail http://127.0.0.1:3000/ppc-functions.js
           curl --fail http://127.0.0.1:3000/xex-lab.html
           curl --fail http://127.0.0.1:3000/xex-parser.js
+          curl --fail http://127.0.0.1:3000/xex-loader.js
       - name: Verify launch flow
         run: |
           curl --fail -X POST \
