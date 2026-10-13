@@ -1,11 +1,12 @@
 {
-  "name": "xenia-cloud-starter",
-  "version": "0.1.0",
+  "name": "universal-console-runtime",
+  "version": "0.2.0",
   "private": true,
-  "description": "Free GitHub Codespaces foundation for a future Xenia cloud-streaming setup.",
+  "description": "Browser-first universal console runtime with emulator, recompilation, and remote-host backends.",
   "scripts": {
     "start": "node server.js",
-    "check": "node scripts/check.js"
+    "check": "node scripts/check.js",
+    "test:recompiler": "node scripts/test-recompiler.js"
   },
   "engines": {
     "node": ">=20"
