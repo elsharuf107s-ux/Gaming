@@ -14,11 +14,12 @@
     <div>
       <div class="eyebrow">● $0 CONTROL PLANE ONLINE</div>
       <h1>Xenia Cloud</h1>
-      <p class="muted hero-note">Verified projects are now cataloged here. Codespaces still cannot provide the GPU needed for Xenia, so titles that need Xenia or native 3D recompilation are marked as requiring a future GPU host and your own legally obtained game data.</p>
+      <p class="muted hero-note">Browser-playable routes are enabled where possible. Xbox 360/Xenia titles still need a real GPU host, but Mario Kart 64 can now run directly in Chrome from your own local ROM.</p>
     </div>
     <div class="actions">
       <button id="refresh" class="secondary">Refresh status</button>
-      <a class="button" href="/stream.html?game=stream-lab">Open stream lab</a>
+      <a class="button" href="/play-n64.html">N64 player</a>
+      <a class="button secondary" href="/stream.html?game=stream-lab">Stream lab</a>
     </div>
   </div>
 
@@ -70,6 +71,7 @@ function renderSessions(items){
 async function launchGame(gameId){
   try{
     const data=await api('/api/launch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gameId})});
+    if(data.directUrl){location.href=data.directUrl;return}
     await loadStatus();
     if(data.session?.streamUrl) location.href=data.session.streamUrl;
   }catch(e){
