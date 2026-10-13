@@ -14,9 +14,16 @@
       "id": "static-recomp-wasm",
       "name": "Static Recompilation to WebAssembly",
       "state": "experimental",
-      "useFor": ["game-specific-recomp"],
+      "useFor": ["game-specific-recomp","n64-recomp"],
       "entry": null,
-      "notes": "Future adapter for game-specific recompilation projects. Console APIs, graphics, audio and OS calls need per-platform shims."
+      "referenceProjects": [
+        {
+          "name": "Zelda 64: Recompiled",
+          "url": "https://github.com/Zelda64Recomp/Zelda64Recomp",
+          "role": "N64 static-recompilation and modern rendering architecture reference"
+        }
+      ],
+      "notes": "Future adapter for game-specific recompilation projects. Zelda64Recomp is tracked as a verified N64 static-recompilation reference; browser support would still require porting its native rendering/runtime dependencies to WebAssembly/WebGPU."
     },
     {
       "id": "remote-gpu",
