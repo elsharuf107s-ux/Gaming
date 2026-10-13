@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Universal Console Player</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#07090d;color:#f4f7ff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#17203a,#07090d 55%);min-height:100vh}main{width:min(1040px,94vw);margin:auto;padding:28px 0 50px}.card{background:#111725;border:1px solid #2b3857;border-radius:18px;padding:20px;margin:14px 0}h1{font-size:clamp(2rem,6vw,4.5rem);margin:.2rem 0}.muted{color:#aebad6}.ok{color:#77f2a4}.warn{color:#ffd778}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}button,select,.pick{border:1px solid #465674;border-radius:12px;padding:12px 14px;background:#eef3ff;color:#08101d;font-weight:800}.pick{display:inline-block;cursor:pointer}select{background:#1a2233;color:#eef3ff}input[type=file]{display:none}#game{height:min(72vh,720px);background:#000;border-radius:14px;overflow:hidden}.hide{display:none}code{background:#080c14;padding:2px 6px;border-radius:6px}.systems{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:14px}.tag{padding:8px 10px;border:1px solid #35415e;border-radius:10px;color:#bdc8e4;font-size:.84rem}</style>
+</head>
+<body>
+<main>
+  <div class="card">
+    <div class="ok">● UNIVERSAL BROWSER RUNTIME</div>
+    <h1>Play console games in Chrome</h1>
+    <p class="muted">Choose a game file you legally obtained. The file stays in this browser tab and is passed to a WebAssembly emulator core; this project does not upload or distribute ROMs or disc images.</p>
+    <div class="row">
+      <label class="pick">Choose game file<input id="rom" type="file"></label>
+      <select id="core">
+        <option value="auto">Auto-detect system</option>
+        <option value="nes">Nintendo NES</option>
+        <option value="snes">Super Nintendo</option>
+        <option value="gb">Game Boy / Color</option>
+        <option value="gba">Game Boy Advance</option>
+        <option value="n64">Nintendo 64</option>
+        <option value="nds">Nintendo DS</option>
+        <option value="psx">PlayStation 1</option>
+        <option value="segaMD">Sega Genesis / Mega Drive</option>
+        <option value="segaMS">Sega Master System</option>
+        <option value="segaGG">Sega Game Gear</option>
+        <option value="segaCD">Sega CD</option>
+        <option value="sega32x">Sega 32X</option>
+        <option value="segaSaturn">Sega Saturn</option>
+        <option value="atari2600">Atari 2600</option>
+        <option value="atari7800">Atari 7800</option>
+        <option value="lynx">Atari Lynx</option>
+        <option value="jaguar">Atari Jaguar</option>
+        <option value="pce">PC Engine / TurboGrafx-16</option>
+        <option value="vb">Virtual Boy</option>
+        <option value="ngp">Neo Geo Pocket</option>
+        <option value="ws">WonderSwan</option>
+        <option value="3do">3DO</option>
+        <option value="arcade">Arcade</option>
+      </select>
+      <button id="launch" disabled>Launch</button>
+    </div>
+    <p id="status" class="muted">No game selected.</p>
+  </div>
+
+  <div class="card">
+    <strong>Browser-first systems</strong>
+    <div class="systems"><div class="tag">NES</div><div class="tag">SNES</div><div class="tag">GB/GBC</div><div class="tag">GBA</div><div class="tag">N64</div><div class="tag">Nintendo DS</div><div class="tag">PlayStation 1</div><div class="tag">Genesis</div><div class="tag">Sega CD</div><div class="tag">Saturn</div><div class="tag">Atari</div><div class="tag">3DO / Arcade</div></div>
+    <p class="muted">Newer consoles such as Xbox 360, PS3, Switch, and modern systems need a separate recompilation/runtime or remote GPU backend. The launcher architecture can route those later.</p>
+  </div>
+
+  <div id="playerCard" class="card hide">
+    <div id="game"></div>
+  </div>
+</main>
+<script>
+const input=document.getElementById('rom');
+const select=document.getElementById('core');
+const launch=document.getElementById('launch');
+const status=document.getElementById('status');
+let selectedFile=null;
+
+const extensionMap={
+  nes:'nes',fds:'nes',unif:'nes',unf:'nes',
+  smc:'snes',sfc:'snes',fig:'snes',bsx:'snes',swc:'snes',
+  gb:'gb',gbc:'gb',gba:'gba',z64:'n64',n64:'n64',v64:'n64',nds:'nds',
+  md:'segaMD',gen:'segaMD',smd:'segaMD',sms:'segaMS',gg:'segaGG',
+  '32x':'sega32x',cue:'psx',pbp:'psx',pce:'pce',vb:'vb',lnx:'lynx',
+  ngp:'ngp',ngc:'ngp',ws:'ws',wsc:'ws',a26:'atari2600',a78:'atari7800'
+};
+function ext(name){const p=name.toLowerCase().split('.');return p.length>1?p.pop():''}
+function detectedCore(){return extensionMap[ext(selectedFile?.name||'')]||null}
+input.addEventListener('change',()=>{
+  selectedFile=input.files?.[0]||null;
+  launch.disabled=!selectedFile;
+  if(!selectedFile){status.textContent='No game selected.';return}
+  const detected=detectedCore();
+  status.textContent=detected?`${selectedFile.name} → detected core: ${detected}`:`${selectedFile.name} → choose the console manually.`;
+});
+launch.addEventListener('click',()=>{
+  if(!selectedFile)return;
+  let core=select.value==='auto'?detectedCore():select.value;
+  if(!core){status.textContent='I cannot safely infer this format. Choose the console from the dropdown.';return}
+  const gameUrl=URL.createObjectURL(selectedFile);
+  document.getElementById('playerCard').classList.remove('hide');
+  document.getElementById('game').innerHTML='';
+  window.EJS_player='#game';
+  window.EJS_core=core;
+  window.EJS_gameUrl=gameUrl;
+  window.EJS_pathtodata='https://cdn.emulatorjs.org/stable/data/';
+  window.EJS_startOnLoaded=true;
+  window.EJS_gameName=selectedFile.name;
+  status.textContent=`Launching ${selectedFile.name} with ${core}…`;
+  const old=document.getElementById('ejs-loader'); if(old) old.remove();
+  const s=document.createElement('script');
+  s.id='ejs-loader';
+  s.src='https://cdn.emulatorjs.org/stable/data/loader.js';
+  s.onerror=()=>status.textContent='Could not load the emulator runtime. Check the browser console/network connection.';
+  document.body.appendChild(s);
+});
+</script>
+</body>
+</html>
