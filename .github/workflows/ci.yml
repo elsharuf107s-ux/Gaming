@@ -16,8 +16,8 @@ jobs:
           node-version: 20
       - name: Environment check
         run: npm run check
-      - name: Recompiler detection tests
-        run: npm run test:recompiler
+      - name: Recompiler tests
+        run: npm test
       - name: Start server
         run: |
           npm start > /tmp/universal-runtime.log 2>&1 &
@@ -33,6 +33,8 @@ jobs:
           curl --fail http://127.0.0.1:3000/universal.html
           curl --fail http://127.0.0.1:3000/recompiler.html
           curl --fail http://127.0.0.1:3000/recompiler-core.js
+          curl --fail http://127.0.0.1:3000/ppc-lab.html
+          curl --fail http://127.0.0.1:3000/ppc-core.js
       - name: Verify launch flow
         run: |
           curl --fail -X POST \
