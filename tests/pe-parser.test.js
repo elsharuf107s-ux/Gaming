@@ -1,0 +1,22 @@
+const assert=require('assert');
+const PE=require('../public/pe-parser.js');
+
+const image=PE.makeSynthetic();
+const pe=PE.parse(image);
+assert.equal(pe.format,'PE');
+assert.equal(pe.machine,0x01f2);
+assert.equal(pe.numberOfSections,2);
+assert.equal(pe.addressOfEntryPoint,0x1000);
+assert.equal(pe.imageBase,0x82000000);
+assert.equal(pe.sections[0].name,'.text');
+assert.equal(pe.sections[0].executable,true);
+assert.equal(pe.sections[0].containsCode,true);
+assert.equal(pe.sections[1].name,'.data');
+assert.equal(pe.sections[1].executable,false);
+assert.equal(PE.executableSections(pe).length,1);
+assert.equal(PE.rvaToOffset(pe,0x1000),0x200);
+assert.equal(PE.rvaToOffset(pe,0x1010),0x210);
+assert.equal(PE.rvaToOffset(pe,0x2000),0x400);
+assert.equal(PE.rvaToOffset(pe,0x5000),-1);
+assert.throws(()=>PE.parse(new Uint8Array(64)),/MZ/);
+console.log('PE parser tests passed:',JSON.stringify(PE.summarize(pe)));
