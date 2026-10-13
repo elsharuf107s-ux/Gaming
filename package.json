@@ -1,6 +1,6 @@
 {
   "name": "universal-console-runtime",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "Browser-first universal console runtime with emulator, recompilation, and remote-host backends.",
   "scripts": {
@@ -10,11 +10,12 @@
     "test:ppc": "node tests/ppc-core.test.js",
     "test:functions": "node tests/ppc-functions.test.js",
     "test:ppc-module": "node tests/ppc-module.test.js",
+    "test:ppc-state": "node tests/ppc-state.test.js",
     "test:xex": "node tests/xex-parser.test.js",
     "test:xex-loader": "node tests/xex-loader.test.js",
     "test:xex-normal": "node tests/xex-normal.test.js",
     "test:pe": "node tests/pe-parser.test.js",
-    "test": "npm run test:recompiler && npm run test:ppc && npm run test:functions && npm run test:ppc-module && npm run test:xex && npm run test:xex-loader && npm run test:xex-normal && npm run test:pe"
+    "test": "npm run test:recompiler && npm run test:ppc && npm run test:functions && npm run test:ppc-module && npm run test:ppc-state && npm run test:xex && npm run test:xex-loader && npm run test:xex-normal && npm run test:pe"
   },
   "engines": {
     "node": ">=20"
