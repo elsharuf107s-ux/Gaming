@@ -14,12 +14,13 @@
     "test:ppc-linker": "node tests/ppc-linker.test.js",
     "test:ppc-linked-wasm": "node tests/ppc-linked-wasm.test.js",
     "test:xbox-runtime": "node tests/xbox-runtime.test.js",
+    "test:lzx": "node tests/lzx.test.js",
     "test:xex": "node tests/xex-parser.test.js",
     "test:xex-loader": "node tests/xex-loader.test.js",
     "test:xex-normal": "node tests/xex-normal.test.js",
     "test:xex-imports": "node tests/xex-imports.test.js",
     "test:pe": "node tests/pe-parser.test.js",
-    "test": "npm run test:recompiler && npm run test:ppc && npm run test:functions && npm run test:ppc-module && npm run test:ppc-state && npm run test:ppc-linker && npm run test:ppc-linked-wasm && npm run test:xbox-runtime && npm run test:xex && npm run test:xex-loader && npm run test:xex-normal && npm run test:xex-imports && npm run test:pe"
+    "test": "npm run test:recompiler && npm run test:ppc && npm run test:functions && npm run test:ppc-module && npm run test:ppc-state && npm run test:ppc-linker && npm run test:ppc-linked-wasm && npm run test:xbox-runtime && npm run test:lzx && npm run test:xex && npm run test:xex-loader && npm run test:xex-normal && npm run test:xex-imports && npm run test:pe"
   },
   "engines": {
     "node": ">=20"

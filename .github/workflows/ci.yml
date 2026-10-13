@@ -47,6 +47,7 @@ jobs:
           curl --fail http://127.0.0.1:3000/xex-parser.js
           curl --fail http://127.0.0.1:3000/xex-loader.js
           curl --fail http://127.0.0.1:3000/xex-normal.js
+          curl --fail http://127.0.0.1:3000/lzx.js
           curl --fail http://127.0.0.1:3000/xex-imports.js
           curl --fail http://127.0.0.1:3000/pe-parser.js
       - name: Verify launch flow

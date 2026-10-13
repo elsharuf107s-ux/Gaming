@@ -23,7 +23,9 @@
     }
     const get=key=>optional.find(h=>h.key===key)||null;
     const immediate=key=>{const h=get(key);return h?h.value:null};
-    return {format:'XEX2',moduleFlags,headerSize,reserved,securityOffset,headerCount,entryPoint:immediate(KEYS.ENTRY_POINT),imageBase:immediate(KEYS.IMAGE_BASE),originalBase:immediate(KEYS.ORIGINAL_BASE),defaultStackSize:immediate(KEYS.DEFAULT_STACK_SIZE),optionalHeaders:optional};
+    // Security info starts with its own size, then the loaded image size.
+    const imageSize=securityOffset+8<=b.length?be32(b,securityOffset+4)||null:null;
+    return {format:'XEX2',moduleFlags,headerSize,reserved,securityOffset,headerCount,entryPoint:immediate(KEYS.ENTRY_POINT),imageBase:immediate(KEYS.IMAGE_BASE),originalBase:immediate(KEYS.ORIGINAL_BASE),defaultStackSize:immediate(KEYS.DEFAULT_STACK_SIZE),imageSize,optionalHeaders:optional};
   }
 
   function getOptional(x,key){return x.optionalHeaders.find(h=>h.key===key)||null}
@@ -54,7 +56,7 @@
     return result;
   }
 
-  function summarize(x){return {format:x.format,moduleFlags:hex(x.moduleFlags),headerSize:x.headerSize,securityOffset:hex(x.securityOffset),headerCount:x.headerCount,entryPoint:x.entryPoint==null?null:hex(x.entryPoint),imageBase:x.imageBase==null?null:hex(x.imageBase),originalBase:x.originalBase==null?null:hex(x.originalBase),defaultStackSize:x.defaultStackSize==null?null:x.defaultStackSize}}
+  function summarize(x){return {format:x.format,moduleFlags:hex(x.moduleFlags),headerSize:x.headerSize,securityOffset:hex(x.securityOffset),headerCount:x.headerCount,entryPoint:x.entryPoint==null?null:hex(x.entryPoint),imageBase:x.imageBase==null?null:hex(x.imageBase),originalBase:x.originalBase==null?null:hex(x.originalBase),defaultStackSize:x.defaultStackSize==null?null:x.defaultStackSize,imageSize:x.imageSize==null?null:x.imageSize}}
 
   function makeSynthetic({entryPoint=0x82001000,imageBase=0x82000000,stackSize=0x40000,includeFileFormat=false}={}){
     const count=includeFileFormat?4:3,ffOff=0x50,total=includeFileFormat?0x58:0x40;

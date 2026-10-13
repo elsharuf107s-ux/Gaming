@@ -1,11 +1,12 @@
 (function(root,factory){
   const X=(typeof module==='object'&&module.exports)?require('./xex-parser.js'):root.UCRXEX;
-  const api=factory(X);
+  const L=(typeof module==='object'&&module.exports)?require('./lzx.js'):root.UCRLZX;
+  const api=factory(X,L);
   if(typeof module==='object'&&module.exports) module.exports=api;
   else root.UCRXEXNormal=api;
-})(typeof globalThis!=='undefined'?globalThis:this,function(X){
+})(typeof globalThis!=='undefined'?globalThis:this,function(X,L){
   'use strict';
-  if(!X) throw new Error('xex-parser.js is required');
+  if(!X||!L) throw new Error('xex-parser.js and lzx.js are required');
   const COMPRESSION_NORMAL=2;
   const BLOCK_HEADER_SIZE=24;
 
@@ -55,6 +56,36 @@
     return {blocks,bytesConsumed:offset,terminated:expected.blockSize===0,nextBlock:expected};
   }
 
+  // Each block's data is a run of [u16 big-endian size][LZX bytes] chunks ending with size 0.
+  function readChunks(data,blockIndex=0){
+    const chunks=[];
+    for(let p=0;p<data.length;){
+      if(p+2>data.length) throw new Error(`NORMAL block ${blockIndex} chunk header is truncated`);
+      const size=(data[p]<<8)|data[p+1];p+=2;
+      if(!size) break;
+      if(p+size>data.length) throw new Error(`NORMAL block ${blockIndex} chunk exceeds its block`);
+      chunks.push(data.subarray(p,p+size));p+=size;
+    }
+    return chunks;
+  }
+
+  function extractCompressedStream(payload,normalInfo,options){
+    const chain=walkBlockChain(payload,normalInfo,options);
+    const chunks=chain.blocks.flatMap(block=>readChunks(block.compressedData,block.index));
+    const stream=new Uint8Array(chunks.reduce((n,c)=>n+c.length,0));
+    let p=0;for(const c of chunks){stream.set(c,p);p+=c.length}
+    return {stream,chunkCount:chunks.length,blockCount:chain.blocks.length,terminated:chain.terminated};
+  }
+
+  // Like Xenia, decompress straight to the security-info image size. Without one,
+  // fall back to the older assumption of one 32 KiB LZX frame per chunk.
+  function decompressImage(payload,normalInfo,{imageSize=null,maxBlocks}={}){
+    if(normalInfo.encryptionType!==0) throw new Error('Encrypted NORMAL XEX images are not supported yet');
+    const {stream,chunkCount}=extractCompressedStream(payload,normalInfo,{maxBlocks});
+    const outputLength=imageSize||chunkCount*L.FRAME_SIZE;
+    return L.decompress(stream,{windowSize:normalInfo.windowSize,outputLength});
+  }
+
   function makeSyntheticNormal({windowSize=0x8000,blockDataSize=32}={}){
     const header=new Uint8Array(0x90+BLOCK_HEADER_SIZE+blockDataSize);
     const put32=(o,v)=>{header[o]=v>>>24;header[o+1]=v>>>16;header[o+2]=v>>>8;header[o+3]=v};
@@ -65,5 +96,5 @@
     return header;
   }
 
-  return {COMPRESSION_NORMAL,BLOCK_HEADER_SIZE,parseNormalInfo,parseBlockHeader,walkBlockChain,makeSyntheticNormal};
+  return {COMPRESSION_NORMAL,BLOCK_HEADER_SIZE,parseNormalInfo,parseBlockHeader,walkBlockChain,readChunks,extractCompressedStream,decompressImage,makeSyntheticNormal};
 });
