@@ -1,4 +1,4 @@
-name: Xenia Cloud CI
+name: Universal Console Runtime CI
 
 on:
   push:
@@ -16,18 +16,23 @@ jobs:
           node-version: 20
       - name: Environment check
         run: npm run check
+      - name: Recompiler detection tests
+        run: npm run test:recompiler
       - name: Start server
         run: |
-          npm start > /tmp/xenia-cloud.log 2>&1 &
-          echo $! > /tmp/xenia-cloud.pid
+          npm start > /tmp/universal-runtime.log 2>&1 &
+          echo $! > /tmp/universal-runtime.pid
           sleep 2
-      - name: Verify control plane and browser player
+      - name: Verify control plane and browser tools
         run: |
           curl --fail http://127.0.0.1:3000/api/health
           curl --fail http://127.0.0.1:3000/api/gpu-host
           curl --fail http://127.0.0.1:3000/api/games
           curl --fail http://127.0.0.1:3000/stream.html
           curl --fail http://127.0.0.1:3000/play-n64.html
+          curl --fail http://127.0.0.1:3000/universal.html
+          curl --fail http://127.0.0.1:3000/recompiler.html
+          curl --fail http://127.0.0.1:3000/recompiler-core.js
       - name: Verify launch flow
         run: |
           curl --fail -X POST \
@@ -42,4 +47,4 @@ jobs:
       - name: Stop server
         if: always()
         run: |
-          test -f /tmp/xenia-cloud.pid && kill $(cat /tmp/xenia-cloud.pid) || true
+          test -f /tmp/universal-runtime.pid && kill $(cat /tmp/universal-runtime.pid) || true
