@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Universal Recompiler Lab</title>
+  <style>
+    :root{color-scheme:dark;background:#07090d;color:#eef2ff;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#18203a 0,#090b10 48%,#05070b 100%)}main{width:min(1050px,94vw);margin:0 auto;padding:30px 0 60px}.card{background:#111522;border:1px solid #2d3650;border-radius:18px;padding:20px;margin-bottom:16px}.drop{border:2px dashed #52658f;border-radius:18px;padding:36px;text-align:center}.muted{color:#aeb8d2}.ok{color:#7df2a6}.warn{color:#ffd479}button,a.button{display:inline-block;padding:12px 15px;border:0;border-radius:12px;font-weight:800;cursor:pointer;text-decoration:none;background:#eef2ff;color:#0a0d14}button.secondary,a.secondary{background:#20283b;color:#eef2ff;border:1px solid #394562}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.kv{background:#0b0f18;border:1px solid #26304a;border-radius:12px;padding:14px}.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:#8191b9}.value{font-size:1.05rem;font-weight:800;margin-top:5px;word-break:break-word}pre{white-space:pre-wrap;overflow:auto;background:#080b11;border:1px solid #252d40;border-radius:12px;padding:16px}.actions{display:flex;gap:10px;flex-wrap:wrap}input[type=file]{display:none}.eyebrow{color:#7df2a6;font-weight:800;letter-spacing:.08em;font-size:.82rem}h1{font-size:clamp(2.2rem,6vw,4.8rem);margin:.15em 0}.pill{display:inline-block;border:1px solid #3a4665;border-radius:999px;padding:6px 10px;font-size:.78rem}
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">UNIVERSAL CONSOLE RUNTIME / RECOMPILER LAB</div>
+  <h1>Binary Analyzer</h1>
+  <p class="muted">Drop a ROM or executable you legally own. Only the first 64 KiB is inspected locally in Chrome for format/platform detection. The file is not uploaded by this page.</p>
+
+  <section class="card drop" id="drop">
+    <h2>Select a console file</h2>
+    <p class="muted">XEX, ELF, SELF, XBE, DOL, PS-X EXE, N64 ROMs, and common cartridge formats are recognized at this stage.</p>
+    <label class="button" for="file">Choose file</label>
+    <input id="file" type="file" />
+    <p id="picked" class="muted">Nothing selected.</p>
+  </section>
+
+  <section class="card" id="result" hidden>
+    <div class="actions" style="justify-content:space-between;align-items:center">
+      <div><span class="pill" id="confidence"></span><h2 id="filename"></h2></div>
+      <div class="actions"><button id="download">Download manifest</button><a class="button secondary" href="/universal.html">Universal Player</a></div>
+    </div>
+    <div class="grid" id="facts"></div>
+    <h3>Routing decision</h3>
+    <pre id="route"></pre>
+    <h3>Universal Runtime manifest</h3>
+    <pre id="manifest"></pre>
+  </section>
+
+  <section class="card">
+    <h2>What happens next</h2>
+    <p><strong>Browser emulator:</strong> route directly into a WebAssembly emulator core.</p>
+    <p><strong>Static recompilation:</strong> future adapter lifts guest CPU instructions into a platform-neutral IR, replaces console OS/API calls with runtime shims, then emits WebAssembly.</p>
+    <p><strong>Remote fallback:</strong> when GPU/CPU requirements are too heavy, the same manifest can launch a remote emulator/recompiled build and stream it back through the browser.</p>
+  </section>
+</main>
+<script src="/recompiler-core.js"></script>
+<script>
+const input=document.getElementById('file');
+const picked=document.getElementById('picked');
+const result=document.getElementById('result');
+let currentManifest=null;
+
+async function analyze(file){
+  picked.textContent=`${file.name} · ${(file.size/1024/1024).toFixed(2)} MiB`;
+  const head=await file.slice(0,65536).arrayBuffer();
+  const info=UniversalRecompiler.detect(head,file.name);
+  const manifest=UniversalRecompiler.buildManifest(info,file.size);
+  currentManifest=manifest;
+  document.getElementById('filename').textContent=file.name;
+  document.getElementById('confidence').textContent=`${info.confidence.toUpperCase()} CONFIDENCE`;
+  const facts={Platform:info.platform,Format:info.format,CPU:info.cpu,Bits:info.bits??'unknown',Endianness:info.endianness,Adapter:info.adapter};
+  document.getElementById('facts').innerHTML=Object.entries(facts).map(([k,v])=>`<div class="kv"><div class="label">${k}</div><div class="value">${String(v)}</div></div>`).join('');
+  document.getElementById('route').textContent=`Recommended backend: ${info.backend}\nAdapter: ${info.adapter}\n\n${info.details.join('\n')}`;
+  document.getElementById('manifest').textContent=JSON.stringify(manifest,null,2);
+  result.hidden=false;
+}
+input.addEventListener('change',()=>input.files[0]&&analyze(input.files[0]));
+const drop=document.getElementById('drop');
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.style.borderColor='#7df2a6'});
+drop.addEventListener('dragleave',()=>drop.style.borderColor='#52658f');
+drop.addEventListener('drop',e=>{e.preventDefault();drop.style.borderColor='#52658f';const f=e.dataTransfer.files[0];if(f)analyze(f)});
+document.getElementById('download').onclick=()=>{
+  if(!currentManifest)return;
+  const blob=new Blob([JSON.stringify(currentManifest,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ucr-manifest.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+</script>
+</body>
+</html>
