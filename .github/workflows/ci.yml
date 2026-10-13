@@ -1,0 +1,30 @@
+name: Xenia Cloud CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Environment check
+        run: npm run check
+      - name: Start server
+        run: |
+          npm start > /tmp/xenia-cloud.log 2>&1 &
+          echo $! > /tmp/xenia-cloud.pid
+          sleep 2
+      - name: Verify health endpoint
+        run: |
+          curl --fail http://127.0.0.1:3000/api/health
+      - name: Stop server
+        if: always()
+        run: |
+          test -f /tmp/xenia-cloud.pid && kill $(cat /tmp/xenia-cloud.pid) || true
