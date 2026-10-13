@@ -14,6 +14,7 @@
     FILE_FORMAT_INFO:0x000003ff
   };
   const hex=v=>'0x'+(v>>>0).toString(16).padStart(8,'0');
+  const be16=(b,o)=>((b[o]<<8)|b[o+1])>>>0;
   const be32=(b,o)=>((b[o]<<24)|(b[o+1]<<16)|(b[o+2]<<8)|b[o+3])>>>0;
 
   function parse(buffer){
@@ -26,21 +27,37 @@
     const optional=[];
     for(let i=0;i<headerCount;i++){
       const off=0x18+i*8, key=be32(b,off), value=be32(b,off+4), kind=key&0xff;
-      let resolved=null;
-      if(kind===0) resolved=value;
-      else if(kind===1&&value+4<=b.length) resolved=be32(b,value);
-      optional.push({index:i,key,value,kind,resolved,tableOffset:off});
+      optional.push({
+        index:i,key,value,kind,tableOffset:off,
+        mode:kind===0?'immediate':kind===1?'value-field':'offset',
+        dataOffset:kind===0||kind===1?null:value
+      });
     }
     const get=key=>optional.find(h=>h.key===key)||null;
-    const entry=get(KEYS.ENTRY_POINT), imageBase=get(KEYS.IMAGE_BASE), originalBase=get(KEYS.ORIGINAL_BASE), stack=get(KEYS.DEFAULT_STACK_SIZE);
+    const immediate=key=>{const h=get(key);return h?h.value:null};
     return {
       format:'XEX2',moduleFlags,headerSize,reserved,securityOffset,headerCount,
-      entryPoint:entry?(entry.resolved??entry.value):null,
-      imageBase:imageBase?(imageBase.resolved??imageBase.value):null,
-      originalBase:originalBase?(originalBase.resolved??originalBase.value):null,
-      defaultStackSize:stack?(stack.resolved??stack.value):null,
+      entryPoint:immediate(KEYS.ENTRY_POINT),
+      imageBase:immediate(KEYS.IMAGE_BASE),
+      originalBase:immediate(KEYS.ORIGINAL_BASE),
+      defaultStackSize:immediate(KEYS.DEFAULT_STACK_SIZE),
       optionalHeaders:optional
     };
+  }
+
+  function getOptional(x,key){return x.optionalHeaders.find(h=>h.key===key)||null}
+
+  function parseFileFormatInfo(buffer,xex){
+    const b=buffer instanceof Uint8Array?buffer:new Uint8Array(buffer);
+    const h=getOptional(xex,KEYS.FILE_FORMAT_INFO);
+    if(!h) return null;
+    const off=h.value>>>0;
+    if(off+8>b.length) throw new Error('XEX file-format info is truncated');
+    const infoSize=be32(b,off);
+    const encryptionType=be16(b,off+4);
+    const compressionType=be16(b,off+6);
+    if(infoSize<8||off+infoSize>b.length) throw new Error('Invalid XEX file-format info size');
+    return {offset:off,infoSize,encryptionType,compressionType};
   }
 
   function summarize(x){
@@ -57,19 +74,25 @@
     };
   }
 
-  function makeSynthetic({entryPoint=0x82001000,imageBase=0x82000000,stackSize=0x40000}={}){
-    const count=3, imageBasePtr=0x40, total=0x44;
+  function makeSynthetic({entryPoint=0x82001000,imageBase=0x82000000,stackSize=0x40000,includeFileFormat=false}={}){
+    const count=includeFileFormat?4:3;
+    const ffOff=0x50;
+    const total=includeFileFormat?0x58:0x40;
     const b=new Uint8Array(total);
     b.set([0x58,0x45,0x58,0x32],0);
     const put=(o,v)=>{b[o]=v>>>24;b[o+1]=v>>>16;b[o+2]=v>>>8;b[o+3]=v};
-    put(4,1);put(8,0x40);put(12,0);put(16,0x100);put(20,count);
+    b[4]=0;b[5]=0;b[6]=0;b[7]=1;
+    put(8,0x40);put(12,0);put(16,0x100);put(20,count);
     let o=0x18;
     put(o,KEYS.ENTRY_POINT);put(o+4,entryPoint);o+=8;
-    put(o,KEYS.IMAGE_BASE);put(o+4,imageBasePtr);o+=8;
-    put(o,KEYS.DEFAULT_STACK_SIZE);put(o+4,stackSize);
-    put(imageBasePtr,imageBase);
+    put(o,KEYS.IMAGE_BASE);put(o+4,imageBase);o+=8;
+    put(o,KEYS.DEFAULT_STACK_SIZE);put(o+4,stackSize);o+=8;
+    if(includeFileFormat){
+      put(o,KEYS.FILE_FORMAT_INFO);put(o+4,ffOff);
+      put(ffOff,8); b[ffOff+4]=0;b[ffOff+5]=0;b[ffOff+6]=0;b[ffOff+7]=0;
+    }
     return b;
   }
 
-  return {KEYS,parse,summarize,makeSynthetic,be32};
+  return {KEYS,parse,getOptional,parseFileFormatInfo,summarize,makeSynthetic,be16,be32};
 });
