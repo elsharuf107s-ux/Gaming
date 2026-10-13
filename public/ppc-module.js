@@ -47,7 +47,7 @@
 
   async function instantiateCompiled(compiled,imports={env:{runtimeCall:(id,arg)=>arg|0}}){
     if(!compiled.ok) throw new Error(compiled.reason||'Function did not compile');
-    return PPC.instantiateWasm(compiled.wasm,{imports});
+    return PPC.instantiateWasm(compiled.wasm,{runtimeCall:imports?.env?.runtimeCall});
   }
 
   async function runCompiled(compiled,imports){
