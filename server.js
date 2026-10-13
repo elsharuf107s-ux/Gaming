@@ -9,15 +9,17 @@ const publicDir = path.join(__dirname, 'public');
 const games = [
   {
     id: 'mkart360',
-    title: 'MKart360 (Mario Kart 64 Xbox 360 Port)',
-    platform: 'Xbox 360 / Xenia',
-    category: 'xenia-homebrew-port',
-    status: 'verified-project',
-    compatibility: 'Project explicitly documents Xenia Netplay support',
+    title: 'Mario Kart 64 / MKart360 Path',
+    platform: 'Browser N64 now · Xbox 360/Xenia later',
+    category: 'browser-playable + xenia-homebrew-port',
+    status: 'playable-now',
+    compatibility: 'Chromebook browser path uses an N64 WebAssembly core; MKart360 itself still requires Xenia/Xbox 360 tooling',
     sourceUrl: 'https://github.com/sirdankz/MKart360',
-    requirements: 'Your own legally obtained US Mario Kart 64 ROM; Windows/Xbox 360 build toolchain; real Xenia-capable GPU host.',
-    notes: 'The repository omits copyrighted ROM-derived assets. Its build script generates the Xbox 360 XEX after you provide your own ROM.',
-    launchableHere: false
+    requirements: 'For browser play: your own legally obtained .z64/.n64 ROM. For MKart360/Xenia: your own US Mario Kart 64 ROM, Xbox 360 build tools, and a real GPU host.',
+    notes: 'The Play button opens a local-ROM N64 player so you can play on the Chromebook today. Your ROM is selected locally in Chrome; this project does not include or distribute it.',
+    launchableHere: true,
+    launchMode: 'browser-n64',
+    directUrl: '/play-n64.html'
   },
   {
     id: 'project8recomp',
@@ -75,7 +77,8 @@ const games = [
     compatibility: 'Codespaces',
     requirements: 'Chrome-compatible browser.',
     notes: 'Interactive canvas demo for latency, keyboard and controller testing.',
-    launchableHere: true
+    launchableHere: true,
+    launchMode: 'browser-demo'
   }
 ];
 
@@ -132,7 +135,7 @@ const server = http.createServer(async (req, res) => {
       gpuExpected: false,
       mockGpuConnected: gpuHost.state === 'ready',
       activeSessions: sessions.size,
-      message: 'Codespaces is the control plane and mock host. Real Xenia still requires a compatible GPU host.'
+      message: 'Browser-native/N64 play works on the Chromebook. Real Xenia still requires a compatible GPU host.'
     });
   }
 
@@ -164,12 +167,21 @@ const server = http.createServer(async (req, res) => {
         });
       }
 
+      if (game.directUrl) {
+        return sendJson(res, 200, {
+          ok: true,
+          directUrl: game.directUrl,
+          game,
+          notice: 'This route runs in your Chromebook browser and keeps the selected ROM local to the browser page.'
+        });
+      }
+
       const session = {
         id: crypto.randomUUID(),
         gameId: game.id,
         title: game.title,
         state: 'running',
-        mode: 'browser-demo',
+        mode: game.launchMode || 'browser-demo',
         hostId: gpuHost.id,
         startedAt: new Date().toISOString(),
         streamUrl: `/stream.html?session=${encodeURIComponent(crypto.randomUUID())}&game=${encodeURIComponent(game.id)}`,
