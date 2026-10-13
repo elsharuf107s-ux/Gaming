@@ -22,6 +22,18 @@ const games = [
     directUrl: '/play-n64.html'
   },
   {
+    id: 'zelda64recomp',
+    title: 'Zelda 64: Recompiled',
+    platform: 'Native N64 static recompilation',
+    category: 'n64-recomp-reference',
+    status: 'verified-project',
+    compatibility: 'Uses N64: Recompiled for static recompilation and RT64 for rendering; current upstream target is native desktop rather than browser WebAssembly.',
+    sourceUrl: 'https://github.com/Zelda64Recomp/Zelda64Recomp',
+    requirements: 'Your own legally obtained North American Majora\'s Mask ROM. The upstream project does not ship game assets.',
+    notes: 'Key reference for the browser-recomp path: reuse the N64 static-recomp architecture and study how RT64 bridges N64 rendering to modern graphics APIs. Upstream explicitly disallows AI-generated contributions, so this project is used as a reference/integration target rather than receiving AI-authored patches.',
+    launchableHere: false
+  },
+  {
     id: 'project8recomp',
     title: "Tony Hawk's Project 8 Recompiled",
     platform: 'Native PC recompilation',
