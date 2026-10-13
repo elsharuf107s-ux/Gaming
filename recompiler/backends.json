@@ -1,0 +1,41 @@
+{
+  "schema": "ucr-backends/v1",
+  "backends": [
+    {
+      "id": "browser-emulator",
+      "kind": "wasm-emulator",
+      "status": "working",
+      "targets": ["NES","SNES","GB","GBC","GBA","N64","NDS","PS1","Genesis","Sega CD","32X","Saturn","Atari","Arcade"],
+      "runtime": "EmulatorJS-compatible browser core",
+      "notes": "Best path for older consoles; user-supplied game files remain local in browser."
+    },
+    {
+      "id": "xbox360-static-recomp",
+      "kind": "static-recompiler",
+      "status": "scaffold",
+      "input": ["XEX2"],
+      "guestCpu": "PowerPC",
+      "ir": "ucr-ir/v1",
+      "output": ["WASM", "native"],
+      "notes": "Future adapter inspired by static recompilation workflows such as XenonRecomp. Requires game-specific OS/GPU shims and legally obtained game data."
+    },
+    {
+      "id": "ps3-static-recomp",
+      "kind": "static-recompiler",
+      "status": "research",
+      "input": ["SELF", "ELF"],
+      "guestCpu": "Cell / PowerPC64 + SPU",
+      "ir": "ucr-ir/v1",
+      "output": ["WASM", "native"],
+      "notes": "Hard target because SPU, RSX and PS3 OS behavior require substantial game/runtime-specific work."
+    },
+    {
+      "id": "remote-gpu",
+      "kind": "streaming-fallback",
+      "status": "scaffold",
+      "targets": ["Xbox 360", "PS3", "modern/heavy titles"],
+      "transport": "WebRTC",
+      "notes": "Used when a Chromebook cannot execute the workload locally."
+    }
+  ]
+}
