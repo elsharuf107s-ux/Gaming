@@ -1,0 +1,13 @@
+{
+  "name": "Xenia Cloud Starter",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "Xenia Cloud Dashboard",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "postCreateCommand": "npm run check",
+  "postStartCommand": "nohup npm start >/tmp/xenia-cloud.log 2>&1 &"
+}
