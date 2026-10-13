@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "description": "Execution backends for the Universal Console Runtime. No copyrighted game data is included.",
+  "backends": [
+    {
+      "id": "browser-wasm",
+      "name": "Browser WebAssembly Emulator",
+      "state": "active",
+      "useFor": ["nes","snes","gb","gba","n64","nds","psx","segaMD","segaMS","segaGG","segaCD","sega32x","segaSaturn","atari2600","atari7800","lynx","jaguar","pce","vb","ngp","ws","3do","arcade"],
+      "entry": "/universal.html",
+      "notes": "Runs user-selected legal game files locally in Chrome through EmulatorJS/WebAssembly."
+    },
+    {
+      "id": "static-recomp-wasm",
+      "name": "Static Recompilation to WebAssembly",
+      "state": "experimental",
+      "useFor": ["game-specific-recomp"],
+      "entry": null,
+      "notes": "Future adapter for game-specific recompilation projects. Console APIs, graphics, audio and OS calls need per-platform shims."
+    },
+    {
+      "id": "remote-gpu",
+      "name": "Remote GPU Stream",
+      "state": "planned",
+      "useFor": ["xbox360","ps3","switch","modern-3d"],
+      "entry": null,
+      "notes": "Fallback for systems too heavy or incompatible with current browser execution."
+    }
+  ]
+}
