@@ -24,7 +24,7 @@ function analyze(bytes){
   try{const pe=UCRPE.parse(loaded.image);const entryRva=(loaded.entryPoint-loaded.virtualBase)>>>0;const codeSections=UCRPE.executableSections(pe);const containing=codeSections.find(s=>entryRva>=s.virtualAddress&&entryRva<s.virtualAddress+Math.max(s.virtualSize,s.sizeOfRawData));report.pe={...UCRPE.summarize(pe),entryInsideExecutableSection:!!containing,entrySection:containing?containing.name:null}}catch(e){report.pe={parsed:false,error:e.message,note:'Synthetic/raw payloads may not contain a PE image.'}}
   S.textContent=JSON.stringify(report,null,2);
   const slice=UCRXEXLoader.entrySlice(loaded,Math.min(4096,loaded.image.length-loaded.entryOffset));
-  const decoded=UCRPPC.decodeBuffer(slice,{count:Math.min(128,Math.floor(slice.length/4)),baseAddress:loaded.entryPoint});
+  const decoded=UCRPPCFunctions.decodeBuffer(slice,{count:Math.min(128,Math.floor(slice.length/4)),baseAddress:loaded.entryPoint});
   C.textContent=decoded.map(i=>`${hx(i.address)}  ${i.text}`).join('\n');
   const analysis=UCRPPCFunctions.analyzeBytes(slice,{baseAddress:loaded.entryPoint,entryPoint:loaded.entryPoint,maxInstructions:128});
   F.textContent=JSON.stringify({entryPoint:hx(loaded.entryPoint),imageBase:hx(loaded.virtualBase),entryOffset:loaded.entryOffset,functions:analysis.functions,calls:analysis.calls},null,2);
