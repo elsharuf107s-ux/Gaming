@@ -34,12 +34,12 @@
     if(!isPE32&&!isPE32Plus) throw new Error(`Unsupported PE optional-header magic 0x${magic.toString(16)}`);
     const addressOfEntryPoint=sizeOfOptionalHeader>=20?u32(b,optional+16):0;
     const imageBase=isPE32Plus
-      ? (u32(b,optional+28) + u32(b,optional+32)*0x100000000)
+      ? (u32(b,optional+24) + u32(b,optional+28)*0x100000000)
       : u32(b,optional+28);
-    const sectionAlignment=sizeOfOptionalHeader>=36?u32(b,optional+32):0;
-    const fileAlignment=sizeOfOptionalHeader>=40?u32(b,optional+36):0;
-    const sizeOfImage=sizeOfOptionalHeader>=60?u32(b,optional+56):0;
-    const sizeOfHeaders=sizeOfOptionalHeader>=64?u32(b,optional+60):0;
+    const sectionAlignment=isPE32Plus?u32(b,optional+32):u32(b,optional+32);
+    const fileAlignment=isPE32Plus?u32(b,optional+36):u32(b,optional+36);
+    const sizeOfImage=u32(b,optional+56);
+    const sizeOfHeaders=u32(b,optional+60);
     const table=optional+sizeOfOptionalHeader;
     if(numberOfSections>96) throw new Error('Unreasonable PE section count');
     if(table+numberOfSections*40>b.length) throw new Error('PE section table truncated');
@@ -74,17 +74,17 @@
   }
 
   function executableSections(pe){return pe.sections.filter(s=>s.executable||s.containsCode)}
-
   function summarize(pe){return {machine:'0x'+pe.machine.toString(16).padStart(4,'0'),sections:pe.numberOfSections,entryRva:hex(pe.addressOfEntryPoint),imageBase:'0x'+Math.trunc(pe.imageBase).toString(16),sizeOfImage:pe.sizeOfImage,executableSections:executableSections(pe).map(s=>({name:s.name,rva:hex(s.virtualAddress),virtualSize:s.virtualSize,rawOffset:s.pointerToRawData,rawSize:s.sizeOfRawData,flags:hex(s.flags)}))}}
 
+  function putName(b,o,name){for(let i=0;i<8;i++)b[o+i]=i<name.length?name.charCodeAt(i):0}
   function makeSynthetic(){
     const b=new Uint8Array(0x600); const put16=(o,v)=>{b[o]=v;b[o+1]=v>>>8}; const put32=(o,v)=>{b[o]=v;b[o+1]=v>>>8;b[o+2]=v>>>16;b[o+3]=v>>>24};
     b[0]=0x4d;b[1]=0x5a;put32(0x3c,0x80);
     b.set([0x50,0x45,0,0],0x80); const coff=0x84;
     put16(coff,0x01f2);put16(coff+2,2);put16(coff+16,0xe0);put16(coff+18,0x0002);
     const opt=coff+20;put16(opt,0x10b);put32(opt+16,0x1000);put32(opt+28,0x82000000);put32(opt+32,0x1000);put32(opt+36,0x200);put32(opt+56,0x3000);put32(opt+60,0x200);
-    let s=opt+0xe0;b.set(Array.from(Buffer.from('.text\0\0\0')),s);put32(s+8,0x100);put32(s+12,0x1000);put32(s+16,0x200);put32(s+20,0x200);put32(s+36,0x60000020);
-    s+=40;b.set(Array.from(Buffer.from('.data\0\0\0')),s);put32(s+8,0x80);put32(s+12,0x2000);put32(s+16,0x200);put32(s+20,0x400);put32(s+36,0xc0000040);
+    let s=opt+0xe0;putName(b,s,'.text');put32(s+8,0x100);put32(s+12,0x1000);put32(s+16,0x200);put32(s+20,0x200);put32(s+36,0x60000020);
+    s+=40;putName(b,s,'.data');put32(s+8,0x80);put32(s+12,0x2000);put32(s+16,0x200);put32(s+20,0x400);put32(s+36,0xc0000040);
     return b;
   }
 
