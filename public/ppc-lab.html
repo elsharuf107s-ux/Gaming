@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PowerPC → WebAssembly Lab</title>
+<style>
+:root{color-scheme:dark;background:#080b12;color:#eef2ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#18203a,#080b12 55%);min-height:100vh}main{width:min(1100px,94vw);margin:auto;padding:32px 0 60px}.card{background:#111725;border:1px solid #2e3854;border-radius:18px;padding:18px;margin:14px 0}h1{font-size:clamp(2rem,6vw,4.5rem);margin:.2rem 0}.muted{color:#aeb8d2}.ok{color:#7df2a6}.warn{color:#ffd479}button,a{display:inline-block;border:0;border-radius:12px;padding:11px 14px;font-weight:800;text-decoration:none;cursor:pointer;background:#eef2ff;color:#0b0f18;margin:4px}textarea,pre,input{width:100%;background:#080b12;color:#eef2ff;border:1px solid #2d3650;border-radius:12px;padding:12px;font-family:ui-monospace,SFMono-Regular,monospace}textarea{min-height:150px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}.pill{display:inline-block;padding:5px 9px;border:1px solid #3a4768;border-radius:999px;font-size:.8rem}.drop{border:2px dashed #53678f;padding:24px;text-align:center;border-radius:16px}</style>
+</head>
+<body><main>
+<a href="/">← Dashboard</a>
+<div class="card"><div class="ok">● REAL RECOMPILATION PROTOTYPE</div><h1>PowerPC → IR → WebAssembly</h1><p class="muted">This page decodes a small, real subset of big-endian PowerPC instructions, converts them to a universal IR, emits a WebAssembly module, and executes it in Chrome. It is the first compiler slice for the future Xbox 360 backend—not a full XEX runtime yet.</p></div>
+<div class="grid">
+<section class="card"><h2>Quick demo</h2><p class="muted">Compiles <code>addi r3,r0,40; addi r3,r3,2; ori r3,r3,0</code>. Expected result: <strong>42</strong>.</p><button id="demo">Compile + run demo</button><button id="download">Download last .wasm</button></section>
+<section class="card"><h2>Supported right now</h2><p><span class="pill">addi</span> <span class="pill">addis</span> <span class="pill">ori</span> <span class="pill">oris</span> <span class="pill">xori</span> <span class="pill">andi.</span> <span class="pill">andis.</span> <span class="pill">add</span> <span class="pill">subf</span> <span class="pill">or</span> <span class="pill">xor</span> <span class="pill">and</span></p><p class="warn">Branches are decoded but deliberately rejected by the current WASM emitter.</p></section>
+</div>
+<section class="card"><h2>Drop raw PowerPC bytes</h2><div class="drop"><input id="file" type="file"><p class="muted">Reads the first 4 KiB locally. The file is not uploaded by this page.</p></div><label>Result register (0-31)<input id="reg" type="number" min="0" max="31" value="3"></label><p><button id="compileFile">Decode + compile</button></p></section>
+<div class="grid"><section class="card"><h2>Decoded / IR</h2><pre id="ir">Nothing compiled yet.</pre></section><section class="card"><h2>Execution</h2><pre id="result">Ready.</pre></section></div>
+<script src="/ppc-core.js"></script>
+<script>
+let lastWasm=null;
+const ir=document.getElementById('ir'), result=document.getElementById('result');
+async function compileDecoded(decoded){
+  ir.textContent=JSON.stringify({decoded,ir:UCRPPC.toIR(decoded)},null,2);
+  const reg=Number(document.getElementById('reg').value||3);
+  lastWasm=UCRPPC.compileToWasm(decoded,{resultRegister:reg});
+  const value=await UCRPPC.runWasm(lastWasm);
+  result.textContent=`Compiled ${decoded.length} PowerPC instruction(s) into ${lastWasm.length} WebAssembly bytes.\nrun() => ${value}\nResult register: r${reg}`;
+}
+document.getElementById('demo').onclick=async()=>{
+  const words=[UCRPPC.encodeD(14,3,0,40),UCRPPC.encodeD(14,3,3,2),UCRPPC.encodeD(24,3,3,0)];
+  await compileDecoded(UCRPPC.decodeBuffer(UCRPPC.wordsToBytes(words)));
+};
+document.getElementById('compileFile').onclick=async()=>{
+  try{
+    const f=document.getElementById('file').files[0]; if(!f) throw new Error('Choose a file first.');
+    const buf=await f.slice(0,4096).arrayBuffer();
+    const decoded=UCRPPC.decodeBuffer(buf,{count:Math.min(256,Math.floor(buf.byteLength/4))});
+    await compileDecoded(decoded);
+  }catch(e){result.textContent='Compile stopped: '+e.message+'\n\nThis usually means the file contains an instruction the current first-stage emitter does not support yet.'}
+};
+document.getElementById('download').onclick=()=>{
+  if(!lastWasm){result.textContent='Compile something first.';return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lastWasm],{type:'application/wasm'}));a.download='ppc-output.wasm';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+</script></main></body></html>
